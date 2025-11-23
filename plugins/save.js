@@ -25,74 +25,63 @@ cmd(
         return reply("*Please reply to the Status/View Once Photo/Video you want to save.* 💾");
       }
 
-      // Check if the quoted message is a view once message
-      const isViewOnce = quoted.msg && quoted.msg.viewOnce;
+      // --- 1. Identify and Extract the Media Message ---
+      let mediaMsg = quoted.msg;
       
-      // Check if the quoted message is from a status (key.fromMe and a remote JID in key.participant/key.remoteJid)
-      // Note: Status messages are often hard to reliably detect without checking the message key itself 
-      // or using a dedicated status reading method. For this structure, we'll primarily focus on media type.
+      // Handle View Once messages: The actual content is nested inside 'message'
+      if (quoted.msg && quoted.msg.viewOnce) {
+        mediaMsg = quoted.msg.message;
+      }
       
-      const quotedMessageType = quoted.mtype;
-
+      // Determine the type of media and extract the relevant object
       let mediaType = "";
       let mediaData = null;
-      let caption = quoted.caption || "";
-      
-      // Determine the type of media and extract data
-      if (isViewOnce) {
-        // For view once messages, the content is inside quoted.msg.message
-        const viewOnceMessage = quoted.msg.message;
-        
-        if (viewOnceMessage.imageMessage) {
-          mediaType = "image";
-          mediaData = viewOnceMessage.imageMessage;
-          caption = mediaData.caption || caption;
-        } else if (viewOnceMessage.videoMessage) {
-          mediaType = "video";
-          mediaData = viewOnceMessage.videoMessage;
-          caption = mediaData.caption || caption;
-        }
-      } else if (quotedMessageType === 'imageMessage') {
-        mediaType = "image";
-        mediaData = quoted.msg;
-      } else if (quotedMessageType === 'videoMessage') {
-        mediaType = "video";
-        mediaData = quoted.msg;
-      }
+      let caption = mediaMsg.caption || quoted.caption || "";
 
+      if (mediaMsg.imageMessage) {
+        mediaType = "image";
+        mediaData = mediaMsg.imageMessage;
+      } else if (mediaMsg.videoMessage) {
+        mediaType = "video";
+        mediaData = mediaMsg.videoMessage;
+      }
+      
+      // Check if a valid media type was found
       if (!mediaData || !mediaType) {
         return reply("*The quoted message is not a recognizable Photo, Video, or View Once media.* ☹️");
       }
       
-      // Prepare the message options
-      let messageOptions = {
-        caption: `*💾 Saved Media:*\n${caption}`,
-      };
+      // --- 2. Download the Media ---
       
-      // Get buffer/stream/url from mediaData (assuming the quoted object structure handles it)
-      // In a typical environment, quoted.download() would be used, but since we are simulating the structure, 
-      // we'll rely on the existing properties in quoted.msg.
+      // We must pass the correct object to zanta.downloadMediaMessage
+      // In Baileys, the 'quoted' message object can usually download its own media.
+      // We rely on the existing zanta.downloadMediaMessage function to handle the quoted object correctly.
       
       const mediaBuffer = await zanta.downloadMediaMessage(quoted);
       
       if (!mediaBuffer) {
-          return reply("*Could not download media from the quoted message.* 🙁");
+          return reply("*Could not download media from the quoted message. Check if it's a recent status or media.* 🙁");
       }
 
+      // --- 3. Resend the Media ---
+      
+      const messageOptions = {
+        caption: `*💾 Saved Media (${mediaType.toUpperCase()}):*\n${caption}`,
+      };
+      
       // Resend the media
       if (mediaType === "image") {
         await zanta.sendMessage(from, { image: mediaBuffer, ...messageOptions }, { quoted: mek });
       } else if (mediaType === "video") {
         await zanta.sendMessage(from, { video: mediaBuffer, ...messageOptions }, { quoted: mek });
-      } else {
-        return reply("*Could not determine the media type for resending.* 🙁");
-      }
+      } 
       
-      return reply("*> වැඩේ හරි 🙃✅*");
+      return reply("*Saved and Resent Successfully! 🙃✅*");
       
     } catch (e) {
       console.error(e);
-      reply(`*Error:* ${e.message || e}`);
+      // More specific error message for debugging
+      reply(`*Error during save:* ${e.message || e}\n\n*Possible fix:* Try deleting session and reconnecting.`);
     }
   }
 );
