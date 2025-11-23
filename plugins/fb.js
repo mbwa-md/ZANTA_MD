@@ -5,7 +5,7 @@ cmd(
   {
     pattern: "fb",
     alias: ["facebook"],
-    react: "✅",
+    react: "📥",
     desc: "Download Facebook Video",
     category: "download",
     filename: __filename,
@@ -83,7 +83,7 @@ Your fb video
         { quoted: mek }
       );
 
-      return reply("Thank you for using DANUWA-MD");
+      return reply("Thank you for using ZANTA-MD");
     } catch (e) {
       console.error(e);
       reply(`*Error:* ${e.message || e}`);
