@@ -1,13 +1,31 @@
 const { cmd, commands } = require("../command");
 
-// 🖼️ MENU Image URL එක (පෙර තිබූ පරිදිම)
+// 🖼️ MENU Image URL එක
 const MENU_IMAGE_URL = "https://github.com/Akashkavindu/ZANTA_MD/blob/main/images/ChatGPT%20Image%20Nov%2021,%202025,%2001_49_53%20AM.png?raw=true";
+
+// Helper function to convert number to WhatsApp emoji number (1 -> ➊)
+const numberToEmoji = (num) => {
+    const emojis = ['0', '➊', '➋', '➌', '➍', '➎', '➏', '➐', '➑', '➒', '➓', '⓫', '⓬'];
+    return emojis[parseInt(num)] || num;
+};
+
+// -----------------------------------------------------
+// 1. Interactive Menu Categories (ඔබ ලබා දුන් ලැයිස්තුවට අනුව)
+// -----------------------------------------------------
+// Key එක (1, 2, 3...) මගින් Category එක තෝරා ගැනීමට
+const commandCategories = {
+    "1": { name: "Main", emoji: "🏠", key: "main" },
+    "2": { name: "Genaral", emoji: "📌", key: "other" }, // 'other' ලෙස සලකනු ලැබේ
+    "3": { name: "Download", emoji: "📥", key: "download" },
+    "4": { name: "Owner", emoji: "👑", key: "owner" },
+    "5": { name: "Search", emoji: "🔍", key: "search" }
+};
 
 cmd(
     {
         pattern: "menu",
         react: "📜",
-        desc: "Displays all available commands, categorized.",
+        desc: "Displays the main menu.",
         category: "main",
         filename: __filename,
     },
@@ -23,47 +41,90 @@ cmd(
         try {
             const categories = {};
 
-            // 1. Commands, Category අනුව වෙන් කිරීම
+            // Commands, Category Key අනුව වෙන් කිරීම
             for (let cmdName in commands) {
                 const cmdData = commands[cmdName];
-                const cat = cmdData.category?.toLowerCase() || "other";
+                // 'Genaral' key එක 'other' ලෙස map කිරීම
+                const cat = cmdData.category?.toLowerCase() === "genaral" ? "other" : (cmdData.category?.toLowerCase() || "other");
                 
-                // .menu command එක menu එකේ පෙන්වන්නට අවශ්‍ය නැතිනම්, මෙසේ එය මග හරින්න:
-                if (cmdData.pattern === "menu") continue; 
+                if (cmdData.pattern === "menu") continue;
                 
                 if (!categories[cat]) categories[cat] = [];
                 categories[cat].push({
                     pattern: cmdData.pattern,
-                    desc: cmdData.desc || "No description"
+                    desc: cmdData.desc || `Use .${cmdData.pattern}`,
                 });
             }
 
-            // 2. Custom Formatted Header එක
+            // -----------------------------------------------------
+            // A. REPLY COMMAND CHECK (Interactive Logic)
+            // -----------------------------------------------------
+            if (m.q) {
+                // m.q හි Reply number එක ලැබෙනවා
+                const replyNumber = m.q.trim(); 
+
+                if (commandCategories[replyNumber]) {
+                    const selectedCat = commandCategories[replyNumber];
+                    
+                    // 🚨 REPLY MENU STYLE (ඔබ ඉල්ලූ Box/Divider Style)
+                    let categoryText = "╭──────────●●►\n";
+                    categoryText += `│🎡 *${selectedCat.name.toUpperCase()}* Command List:\n`;
+                    categoryText += "╰──────────●●►\n";
+
+                    const catKey = selectedCat.key;
+                    
+                    if (categories[catKey]) {
+                        categories[catKey].forEach(c => {
+                            // එක් එක් Command එක Box එකකින් පෙන්වයි
+                            categoryText += `╭──────────●●►\n`;
+                            categoryText += `│⛩ Command ☛ ${c.pattern}\n`;
+                            categoryText += `│🏮 Use ☛ ${c.desc}\n`; 
+                            categoryText += `╰──────────●●►\n`;
+                        });
+                    } else {
+                        categoryText += "\n*⚠️ මෙම කාණ්ඩයේ කිසිදු Command එකක් සොයා ගැනීමට නොහැකි විය.*";
+                    }
+
+                    return await reply(categoryText.trim());
+
+                } else {
+                    // වැරදි අංකයක් ලබා දුන් විට
+                    return await reply("*❌ වැරදි අංකයක්!* කරුණාකර Menu එකේ ඇති අංකයක් Reply කරන්න.");
+                }
+            }
+
+            // -----------------------------------------------------
+            // B. MAIN MENU GENERATION (Header + Category List)
+            // -----------------------------------------------------
+            
+            // 1. Welcome Banner (Header) - මුලින්ම මෙය එකතු වේ.
             let menuText = "╭━─━─━─━─━─━─━─━─━╮\n";
             menuText += "┃ 👑 *𝐖𝐄𝐋𝐂𝐎𝐌𝐄 𝐓𝐎 𝐙𝐀𝐍𝐓𝐀-𝐌𝐃* 🤖\n";
             menuText += "┃   _All Available Commands_\n";
             menuText += "╰━─━─━─━─━─━─━─━─━╯\n";
-
-            // 3. Category සහ Commands එකතු කිරීම
-            // 3. Category සහ Commands එකතු කිරීම (මෙම කොටස වෙනස් කළ පසු)
-for (const [cat, cmds] of Object.entries(categories)) {
-    
-    const formattedCat = cat.charAt(0).toUpperCase() + cat.slice(1);
-    
-    // 1. Category Header (වෙන්කරනය)
-    menuText += `\n\n*══ [ 📚 ${formattedCat.toUpperCase()} ] ══*\n\n`;
-    
-    // 2. Commands එකතු කිරීම (නව Box Style එක)
-    cmds.forEach(c => {
-        menuText += `╭──────●●►\n│◻.${c.pattern}\n╰──────●●►\n`;
-    });
-}
-
-            // 4. Footer එක
-            menuText += "\n➖➖➖➖➖➖➖➖➖➖➖➖\n";
-            menuText += "> © 𝟐𝟎𝟐𝟓 | 𝐀𝐤𝐚𝐬𝐡 𝐊𝐚𝐯𝐢𝐧𝐝𝐮\n"; 
             
-            // SEND IMAGE + MENU TEXT IN ONE MESSAGE
+            // 2. Category List Header + Items - දැන් Welcome Banner එකට පහළින් මෙය එකතු වේ.
+            menuText += "╭━━〔 📜 MENU LIST 〕━━┈⊷\n";
+            menuText += "┃◈╭─────────────·๏\n";
+
+            for (const key in commandCategories) {
+                const cat = commandCategories[key];
+                
+                // ➊ Main Menu වැනි Line එකක් නිර්මාණය
+                menuText += `┃◈│ ${numberToEmoji(key)} ${cat.emoji} ${cat.name} Menu\n`; 
+            }
+
+            menuText += "┃◈╰───────────┈⊷\n";
+            menuText += "╰──────────────┈⊷\n\n";
+
+            // 🚨 index.js Logic එකට අවශ්‍ය වන Magic Text එක
+            menuText += "*Choose a menu option by replying with the number*\n";
+
+            // 3. Footer
+            menuText += "\n➖➖➖➖➖➖➖➖➖➖➖\n";
+            menuText += "> © 𝟐𝟎𝟐𝟓 | 𝐀𝐤𝐚𝐬𝐡 𝐊𝐚𝐯𝐢𝐧𝐝𝐮\n";
+            
+            // SEND IMAGE + MENU TEXT
             await zanta.sendMessage(
                 from,
                 {
@@ -79,9 +140,3 @@ for (const [cat, cmds] of Object.entries(categories)) {
         }
     }
 );
-
-
-
-
-
-
