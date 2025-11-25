@@ -1,31 +1,30 @@
 {
-  "name": "ZANTA-MD",
+  "name": "SILA TECH",
   "description": "Javascript WhatsApp bot made by Danuka Dissanayake",
-  "logo": "https://github.com/Akashkavindu/ZANTA_MD/blob/main/images/ChatGPT%20Image%20Nov%2021,%202025,%2001_21_32%20AM.png?raw=true",
-  "keywords": ["ZANTA-MD"],
+  "logo": "https://files.catbox.moe/jwmx1j.jpg",
+  "keywords": ["SILA-TECH", "ZANTA-MD"],
   "success_url": "/",
 
   "env": {
     "SESSION_ID": {
       "description": "Put the session-id here.",
       "required": true
-    },  
-
+    },
     "ALIVE_IMG": {
       "description": "Put your alive img here.",
       "required": true
     },
-    
     "ALIVE_MSG": {
       "description": "Put your alive msg here.",
       "required": true
-    }   
-},
+    }
+  },
 
-     "buildpacks": [
-        {
-            "url": "https://github.com/heroku/heroku-buildpack-nodejs.git"
-        }
-     ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+
   "stack": "heroku-24"
 }
