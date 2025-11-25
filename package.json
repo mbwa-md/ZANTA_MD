@@ -1,13 +1,21 @@
 {
   "name": "ZANTA-MD",
   "version": "1.0.0",
-  "description": "A Powerfull Whatsapp Bot",
+  "description": "A Powerful Whatsapp Bot",
   "main": "index.js",
+
   "scripts": {
-    "start": "pm2 start index.js --deep-monitoring --attach --name ZANTA-MD",
-    "stop": "pm2 stop ZANTA-MD",
-    "restart": "pm2 restart ZANTA-MD"
+    "start": "node index.js",
+    "pm2-start": "pm2 start index.js --deep-monitoring --attach --name ZANTA-MD",
+    "pm2-stop": "pm2 stop ZANTA-MD",
+    "pm2-restart": "pm2 restart ZANTA-MD"
   },
+
+  "engines": {
+    "node": "22.x",
+    "npm": "10.x"
+  },
+
   "dependencies": {
     "@whiskeysockets/baileys": "^7.0.0-rc.9",
     "api-dylux": "^1.8.5",
